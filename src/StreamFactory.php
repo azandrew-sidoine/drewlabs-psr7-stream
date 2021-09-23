@@ -60,7 +60,6 @@ class StreamFactory implements StreamFactoryInterface
          * with it? Is there a way (a PHP method, a function, or maybe a casting function)
          * of achieving this task?
          */
-
         return Stream::new($resource, 'rw+b');
     }
     
