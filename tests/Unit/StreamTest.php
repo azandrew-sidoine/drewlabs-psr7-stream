@@ -10,7 +10,7 @@ class StreamTest extends TestCase
 
     public function testCreateStream()
     {
-        $stream = Stream::new(__DIR__ . '/../../examples/test.txt', 'wb+');
+        $stream = Stream::new(__DIR__ . '/../examples/test.txt', 'wb+');
 
         $this->assertTrue($stream instanceof StreamInterface, 'Expect the returned value to be an instanceof PSR7 StreamInterface');
     }
@@ -21,9 +21,9 @@ class StreamTest extends TestCase
         $stream = Stream::new(null, 'wb+');
         $stream->write("Hello World!\n");
         $stream->rewind();
-        file_put_contents(__DIR__ . '/../../examples/test.txt', $stream->getContents());
+        file_put_contents(__DIR__ . '/../examples/test.txt', $stream->getContents());
         $stream->close();
-        $this->assertTrue(file_get_contents(__DIR__ . '/../../examples/test.txt') === "Hello World!\n", 'Expect the strem content to written successfully to file');
+        $this->assertTrue(file_get_contents(__DIR__ . '/../examples/test.txt') === "Hello World!\n", 'Expect the strem content to written successfully to file');
     }
 
     public function testWriteErrorAfterClose()

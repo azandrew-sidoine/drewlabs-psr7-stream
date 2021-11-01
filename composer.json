@@ -9,7 +9,10 @@
     "autoload": {
         "psr-4": {
             "Drewlabs\\Psr7Stream\\": "src/"
-        }
+        },
+        "files": [
+            "./helpers.php"
+        ]
     },
     "autoload-dev": {
         "classmap": [
