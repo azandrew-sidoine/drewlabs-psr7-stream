@@ -13,14 +13,10 @@ declare(strict_types=1);
 
 namespace Drewlabs\Psr7Stream;
 
-use Drewlabs\Psr7Stream\Exceptions\NotReadableStreamException;
-use Drewlabs\Psr7Stream\Exceptions\NotWritableStreamException;
-use Drewlabs\Psr7Stream\Exceptions\NullStreamPointerException;
-use Drewlabs\Psr7Stream\Exceptions\ReadOperationException;
-use Drewlabs\Psr7Stream\Exceptions\WriteOperationException;
+use Drewlabs\Psr7Stream\Exceptions\IOException;
+use Drewlabs\Psr7Stream\Exceptions\StreamException;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
-use RuntimeException;
 
 class Stream implements StreamInterface
 {
@@ -46,7 +42,7 @@ class Stream implements StreamInterface
     /**
      * @var resource|null A resource reference
      * */
-    private $stream_;
+    private $stream;
 
     /**
      * @var bool
@@ -96,10 +92,7 @@ class Stream implements StreamInterface
     public function __toString()
     {
         try {
-            if ($this->isSeekable()) {
-                $this->seek(0);
-            }
-
+            $this->rewind();
             return $this->getContents();
         } catch (\Throwable $e) {
             throw $e;
@@ -109,11 +102,11 @@ class Stream implements StreamInterface
     /**
      * Creates an instance of Psr7 StreamInterface
      * @param string|resource|StreamInterface $body 
-     * @param string $accessMode 
+     * @param string $mode 
      * @return Stream 
      * @throws InvalidArgumentException 
      */
-    public static function new($body = '', $accessMode = 'rb')
+    public static function new($body = '', $mode = null)
     {
         if ($body instanceof StreamInterface) {
             return $body;
@@ -122,16 +115,16 @@ class Stream implements StreamInterface
         $body = $body ?? '';
 
         if (\is_string($body)) {
-            $resource = fopen('php://temp', $accessMode ?? 'rw+');
+            $resource = fopen('php://temp', $mode ?? 'rw+');
             fwrite($resource, $body);
             $body = $resource;
         }
 
         if (\is_resource($body)) {
             $new = new self();
-            $new->stream_ = $body;
-            $meta = stream_get_meta_data($new->stream_);
-            $new->seekable = $meta['seekable'] && 0 === fseek($new->stream_, 0, \SEEK_CUR);
+            $new->stream = $body;
+            $meta = stream_get_meta_data($new->stream);
+            $new->seekable = $meta['seekable'] && 0 === fseek($new->stream, 0, \SEEK_CUR);
             $new->readable = isset(self::READ_WRITE_DICT['read'][$meta['mode']]);
             $new->writable = isset(self::READ_WRITE_DICT['write'][$meta['mode']]);
             return $new;
@@ -141,22 +134,22 @@ class Stream implements StreamInterface
 
     public function close(): void
     {
-        if (!isset($this->stream_)) {
+        if (!isset($this->stream)) {
             return;
         }
-        if (\is_resource($this->stream_)) {
-            fclose($this->stream_);
+        if (\is_resource($this->stream)) {
+            fclose($this->stream);
         }
         $this->detach();
     }
 
     public function detach()
     {
-        if (!isset($this->stream_)) {
+        if (!isset($this->stream)) {
             return;
         }
-        $result = $this->stream_;
-        unset($this->stream_);
+        $result = $this->stream;
+        unset($this->stream);
         $this->size = $this->uri = null;
         $this->readable = $this->writable = $this->seekable = false;
 
@@ -169,7 +162,7 @@ class Stream implements StreamInterface
             return $this->size;
         }
 
-        if (!isset($this->stream_)) {
+        if (!isset($this->stream)) {
             return null;
         }
 
@@ -178,7 +171,7 @@ class Stream implements StreamInterface
             clearstatcache(true, $uri);
         }
 
-        $stats = fstat($this->stream_);
+        $stats = fstat($this->stream);
         if (!isset($stats['size'])) {
             return null;
         }
@@ -189,7 +182,7 @@ class Stream implements StreamInterface
 
     public function tell(): int
     {
-        if (false === $result = ftell($this->stream_)) {
+        if (false === $result = ftell($this->stream)) {
             throw new \RuntimeException('Unable to determine stream position');
         }
 
@@ -198,7 +191,7 @@ class Stream implements StreamInterface
 
     public function eof(): bool
     {
-        return !$this->stream_ || feof($this->stream_);
+        return !$this->stream || feof($this->stream);
     }
 
     public function isSeekable(): bool
@@ -212,14 +205,16 @@ class Stream implements StreamInterface
             throw new \RuntimeException('Stream is not seekable');
         }
 
-        if (-1 === fseek($this->stream_, $offset, $whence)) {
+        if (-1 === fseek($this->stream, $offset, $whence)) {
             throw new \RuntimeException('Unable to seek to stream position ' . $offset . ' with whence ' . var_export($whence, true));
         }
     }
 
     public function rewind(): void
     {
-        $this->seek(0);
+        if ($this->isSeekable()) {
+            $this->seek(0);
+        }
     }
 
     public function isWritable(): bool
@@ -231,22 +226,21 @@ class Stream implements StreamInterface
      * {@inheritDoc}
      * @param string $string 
      * @return int 
-     * @throws NullStreamPointerException 
-     * @throws NotWritableStreamException 
-     * @throws WriteOperationException 
+     * @throws StreamException
+     * @throws IOException 
      */
     public function write($string): int
     {
-        if (!isset($this->stream_)) {
-            throw new NullStreamPointerException('Stream is detached');
+        if (!isset($this->stream)) {
+            throw StreamException::detached();
         }
         if (!$this->writable) {
-            throw new NotWritableStreamException('Cannot write to a non-writable stream');
+            throw StreamException::notWritable();
         }
         // We can't know the size after writing anything
         $this->size = null;
-        if (false === $result = fwrite($this->stream_, $string)) {
-            throw new WriteOperationException('Unable to write to stream');
+        if (false === $result = fwrite($this->stream, $string)) {
+            throw IOException::write('Unable to write to stream');
         }
 
         return $result;
@@ -261,17 +255,17 @@ class Stream implements StreamInterface
      * {@inheritDoc}
      * @param int $length
      * @return string
-     * @throws NullStreamPointerException 
+     * @throws StreamException 
      * @throws InvalidArgumentException 
-     * @throws ReadOperationException 
+     * @throws IOException 
      */
     public function read($length): string
     {
-        if (!isset($this->stream_)) {
-            throw new NullStreamPointerException('Stream is detached');
+        if (!isset($this->stream)) {
+            throw StreamException::detached('Stream is detached');
         }
         if (!$this->readable) {
-            throw new NotReadableStreamException('Cannot read from non-readable stream');
+            throw IOException::read('Cannot read from non-readable stream');
         }
         if ($length < 0) {
             throw new \InvalidArgumentException('Length parameter cannot be negative');
@@ -280,8 +274,8 @@ class Stream implements StreamInterface
         if (0 === $length) {
             return '';
         }
-        if (false === $result = fread($this->stream_, $length)) {
-            throw new ReadOperationException('Unable to read from stream');
+        if (false === $result = fread($this->stream, $length)) {
+            throw IOException::read('Unable to read from stream');
         }
 
         return $result;
@@ -289,24 +283,22 @@ class Stream implements StreamInterface
 
     public function getContents(): string
     {
-        if (!isset($this->stream_)) {
-            throw new NullStreamPointerException('Unable to read stream contents');
+        if (!isset($this->stream)) {
+            throw StreamException::detached();
         }
-
-        if (false === $contents = stream_get_contents($this->stream_)) {
-            throw new \RuntimeException('Unable to read stream contents');
+        if (false === $contents = stream_get_contents($this->stream)) {
+            throw IOException::read('Unable to read stream contents');
         }
-
         return $contents;
     }
 
     public function getMetadata($key = null)
     {
-        if (!isset($this->stream_)) {
+        if (!isset($this->stream)) {
             return $key ? null : [];
         }
 
-        $meta = stream_get_meta_data($this->stream_);
+        $meta = stream_get_meta_data($this->stream);
 
         if (null === $key) {
             return $meta;

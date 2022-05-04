@@ -1,0 +1,4 @@
+# Change logs
+
+- Removed FileNotFoundException, NotReadableStreamException class, NullStreamException class, WriteOperationException class and replaced it with more compact IOException and StreamException implementations
+- Review implementation of StreamFactory class

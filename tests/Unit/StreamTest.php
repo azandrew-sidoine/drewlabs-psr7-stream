@@ -1,6 +1,6 @@
 <?php
 
-use Drewlabs\Psr7Stream\Exceptions\NullStreamPointerException;
+use Drewlabs\Psr7Stream\Exceptions\StreamException;
 use Drewlabs\Psr7Stream\Stream;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
@@ -28,7 +28,7 @@ class StreamTest extends TestCase
 
     public function testWriteErrorAfterClose()
     {
-        $this->expectException(NullStreamPointerException::class);
+        $this->expectException(StreamException::class);
         $stream = Stream::new(null, 'wb+');
         $stream->write("Hello World!\n");
         $stream->close();
@@ -56,4 +56,44 @@ class StreamTest extends TestCase
         $this->assertTrue($starts_with, 'Expect the Hello, content to be written at the start of the stream');
     }
 
+    public function testConstructorInitializesProperties()
+    {
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, 'data');
+        $stream = Stream::new($handle);
+        $this->assertTrue($stream->isReadable());
+        $this->assertTrue($stream->isWritable());
+        $this->assertTrue($stream->isSeekable());
+        $this->assertEquals('php://temp', $stream->getMetadata('uri'));
+        $this->assertIsArray($stream->getMetadata());
+        $this->assertEquals(4, $stream->getSize());
+        $this->assertFalse($stream->eof());
+        $stream->close();
+    }
+
+    public function testStreamClosesHandleOnDestruct()
+    {
+        $handle = fopen('php://temp', 'r');
+        $stream = Stream::new($handle);
+        unset($stream);
+        $this->assertFalse(is_resource($handle));
+    }
+
+    public function testConvertsToString()
+    {
+        $handle = fopen('php://temp', 'w+');
+        fwrite($handle, 'data');
+        $stream = Stream::new($handle);
+        $this->assertEquals('data', (string) $stream);
+        $this->assertEquals('data', (string) $stream);
+        $stream->close();
+    }
+
+    public function testBuildFromString()
+    {
+        $stream = Stream::new('data');
+        $this->assertEquals('', $stream->getContents());
+        $this->assertEquals('data', $stream->__toString());
+        $stream->close();
+    }
 }

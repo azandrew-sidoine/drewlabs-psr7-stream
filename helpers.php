@@ -13,6 +13,6 @@ if (!function_exists('create_psr_stream')) {
      */
     function create_psr_stream($ressource, $accessMode = null)
     {
-        return StreamFactory::createStreamFrom($ressource, $accessMode ?? 'w+b');
+        return StreamFactory::createStreamFrom($ressource, $accessMode ?? 'r+b');
     }
 }
