@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Drewlabs\Psr7Stream;
 
-use Drewlabs\Psr7Stream\Exceptions\FileNotFoundException;
 use Drewlabs\Psr7Stream\Exceptions\IOException;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -36,7 +35,7 @@ class StreamFactory implements StreamFactoryInterface
         }
         $self = new self;
         // We read from path is it's a file path
-        if (file_exists($resource) || in_array(mb_strtolower($resource), ["php://memory", "php://temp"])) {
+        if (@file_exists($resource) || in_array(mb_strtolower($resource), ["php://memory", "php://temp"])) {
             return $self->createStreamFromFile($resource, $mode);
         }
         if (\is_string($resource)) {
