@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Drewlabs\Psr7Stream;
 
 use Drewlabs\Psr7Stream\Exceptions\IOException;
+use Exception;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
@@ -36,15 +37,19 @@ class StreamFactory implements StreamFactoryInterface
         }
         // We read from path is it's a file path
         try {
-            if (file_exists($resource) || in_array(mb_strtolower($resource), ["php://memory", "php://temp"])) {
+            $file_exists = file_exists($resource);
+            if (!empty($resource) &&  $file_exists || in_array(mb_strtolower($resource), ["php://memory", "php://temp"])) {
                 return (new self)->createStreamFromFile($resource, $mode);
             }
+            return static::createFromString($resource);
+        } catch (Exception $e) {
+            return static::createFromString($resource);
         } catch (TypeError $e) {
-            return static::createFromnString($resource);
+            return static::createFromString($resource);
         }
     }
 
-    private static function createFromnString($resource)
+    private static function createFromString($resource)
     {
         if (\is_string($resource)) {
             return (new self)->createStream($resource);
