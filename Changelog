@@ -2,3 +2,7 @@
 
 - Removed FileNotFoundException, NotReadableStreamException class, NullStreamException class, WriteOperationException class and replaced it with more compact IOException and StreamException implementations
 - Review implementation of StreamFactory class
+
+## [v1.0.2] 2022-11-05
+
+- Add @file_exists to suppress the error at StreamFactory line 38
