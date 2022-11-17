@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace Drewlabs\Psr7Stream;
 
-use Drewlabs\Psr7Stream\Exceptions\FileNotFoundException;
+use Drewlabs\Psr7Stream\Exceptions\IOException;
+use Exception;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
+use TypeError;
 
 class StreamFactory implements StreamFactoryInterface
 {
@@ -28,18 +30,34 @@ class StreamFactory implements StreamFactoryInterface
      * @return StreamInterface|void 
      * @throws InvalidArgumentException 
      */
-    public static function createStreamFrom($resource, $mode = 'w+b')
+    public static function createStreamFrom($resource, $mode = 'r+b')
     {
         if ($resource instanceof \Psr\Http\Message\StreamInterface) {
             return $resource;
         }
+        // We read from path is it's a file path
+        try {
+            $file_exists = file_exists($resource);
+            if (!empty($resource) &&  $file_exists || in_array(mb_strtolower($resource), ["php://memory", "php://temp"])) {
+                return (new self)->createStreamFromFile($resource, $mode);
+            }
+            return static::createFromString($resource);
+        } catch (Exception $e) {
+            return static::createFromString($resource);
+        } catch (TypeError $e) {
+            return static::createFromString($resource);
+        }
+    }
 
+    private static function createFromString($resource)
+    {
         if (\is_string($resource)) {
-            return (new self())->createStream($resource);
+            return (new self)->createStream($resource);
         }
         if (\is_resource($resource)) {
-            return (new self())->createStreamFromResource($resource);
+            return (new self)->createStreamFromResource($resource);
         }
+        throw new InvalidArgumentException("Resource must be of type string");
     }
 
     /**
@@ -62,9 +80,9 @@ class StreamFactory implements StreamFactoryInterface
          */
         //...
 
-        return Stream::new($resource, 'rw+b');
+        return Stream::new($resource, 'w+b');
     }
-    
+
     /**
      * Create a new stream from a string.
      * The stream SHOULD be created with a temporary resource.
@@ -75,7 +93,38 @@ class StreamFactory implements StreamFactoryInterface
      */
     public function createStream($content = ''): StreamInterface
     {
-        return Stream::new($content, 'rw+b');
+        return Stream::new($content, 'w+b');
+    }
+
+    private static function tryFopen(string $path, string $mode)
+    {
+        $exception = null;
+        set_error_handler(static function (int $errno, string $errstr) use ($path, $mode, &$exception): bool {
+            $exception = new \RuntimeException(sprintf(
+                'Unable to open "%s" using mode "%s": %s',
+                $path,
+                $mode,
+                $errstr
+            ));
+            return true;
+        });
+
+        try {
+            $options = substr($path, 0, 5) === 's3://' ? ['s3' => ['seekable' => true]] : [];
+            $handle = fopen($path, $mode, false, stream_context_create($options));
+        } catch (\Throwable $e) {
+            $exception = new \RuntimeException(sprintf(
+                'Unable to open "%s" using mode "%s": %s',
+                $path,
+                $mode,
+                $e->getMessage()
+            ), 0, $e);
+        }
+        restore_error_handler();
+        if ($exception) {
+            throw $exception;
+        }
+        return $handle;
     }
 
     /**
@@ -90,14 +139,14 @@ class StreamFactory implements StreamFactoryInterface
      * @param string $mode
      * @return StreamInterface 
      * @throws InvalidArgumentException 
-     * @throws FileNotFoundException 
+     * @throws IOException 
      */
     public function createStreamFromFile($path, $mode = 'r+b'): StreamInterface
     {
-        if (file_exists($path) || in_array(mb_strtolower($path), ["php://memory", "php://temp"])) {
-            $resource = fopen($path, $mode);
-            return Stream::new($resource);
+        if (@file_exists($path) || in_array(mb_strtolower($path), ["php://memory", "php://temp"])) {
+            $stream = static::tryFopen($path, $mode);
+            return $stream ? Stream::new($stream)  : Stream::new('');
         }
-        throw new FileNotFoundException($path);
+        throw IOException::notFound($path);
     }
 }
