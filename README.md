@@ -53,44 +53,44 @@ $stream = $factory->createStreamFromFile(__DIR__ . '/../../examples/test.txt');
 
 ### +v1.2x
 
-From v1.2.x releases a chunked stream implemenation and a lazy stream implementations has been added.
+From v1.2.x releases a stacked stream implemenation and a lazy stream implementations has been added.
 
-- Chunked Streams
+- Stacked Streams
 
-Chunked stream is an abstraction of the stream interface that creates a stack of `StreamInterface` instances using contiguous memory (Array) and provides same stream interface API for working with the group as whole. For operations like `close()`, `detach()`, `read()`, `getSize()`, etc... every chunk is visited in the order they are inserted.
+Stacked stream is an abstraction of the stream interface that creates a stack of `StreamInterface` instances using contiguous memory (Array) and provides same stream interface API for working with the group as whole. For operations like `close()`, `detach()`, `read()`, `getSize()`, etc... every item is visited in the order they are inserted.
 
-To create a chunked stream:
+To create a Stacked stream:
 
 ```php
 use Drewlabs\Psr7Stream\StreamFactory as Factory;
 
-$stream = Factory::chunk();
+$stream = Factory::stack();
 
 // TO initialize the instance at contruction time
 // The stream instance is initialized with 2 chunks
-$stream = Factory::chunk(Stream::new(''), Stream::new(__DIR__ . '/vendor/autoload.php'))
+$stream = Factory::stack(Stream::new(''), Stream::new(__DIR__ . '/vendor/autoload.php'))
 ```
 
 **Note**
-The chunk stream provide 2 additional methods for adding and removing chunks.
+The stacked stream provide 2 additional methods for adding and removing element.
 
-To add a new stream to the chunk:
+To add a new stream to the stack:
 
 ```php
 use Drewlabs\Psr7Stream\StreamFactory as Factory;
 
-$stream = Factory::chunk();
+$stream = Factory::stack();
 
 // Add a new stream instance
 $stream->push(Stream::new('/path/to/resource'));
 ```
 
-To remove the last inserted chunk:
+To remove the last inserted stack:
 
 ```php
 use Drewlabs\Psr7Stream\StreamFactory as Factory;
 
-$stream = Factory::chunk();
+$stream = Factory::stack();
 
 // Pop the last stream from the stack and return it
 $s = $stream->pop();

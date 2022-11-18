@@ -6,7 +6,7 @@ use Drewlabs\Psr7Stream\Exceptions\StreamException;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 
-class ChunkedStream implements StreamInterface
+class StackedStream implements StreamInterface
 {
     use StringableStream, ReadableStream;
 
