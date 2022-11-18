@@ -84,6 +84,7 @@ class ChunkedStreamTest extends TestCase
 
             // When pop the not seekable stream, the chunk becomes seekable
             $stream->pop();
+            $this->assertFalse($stream->eof());
             $stream->push(Stream::new('Trusty Tar...'));
             $this->assertTrue($stream->isSeekable());
 

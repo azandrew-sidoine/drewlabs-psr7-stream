@@ -35,7 +35,7 @@ $stream = $factory->createStreamFromResource(fopen(__DIR__ . '/../../examples/te
 
 ```
 
-* Creating a Psr7 Stream from file path
+- Creating a Psr7 Stream from file path
 
 ```php
 // ...
@@ -49,4 +49,110 @@ $factory = new StreamFactory();
 // Creates stream from path
 $stream = $factory->createStreamFromFile(__DIR__ . '/../../examples/test.txt');
 
+```
+
+### +v1.2x
+
+From v1.2.x releases a chunked stream implemenation and a lazy stream implementations has been added.
+
+- Chunked Streams
+
+Chunked stream is an abstraction of the stream interface that creates a stack of `StreamInterface` instances using contiguous memory (Array) and provides same stream interface API for working with the group as whole. For operations like `close()`, `detach()`, `read()`, `getSize()`, etc... every chunk is visited in the order they are inserted.
+
+To create a chunked stream:
+
+```php
+use Drewlabs\Psr7Stream\StreamFactory as Factory;
+
+$stream = Factory::chunk();
+
+// TO initialize the instance at contruction time
+// The stream instance is initialized with 2 chunks
+$stream = Factory::chunk(Stream::new(''), Stream::new(__DIR__ . '/vendor/autoload.php'))
+```
+
+**Note**
+The chunk stream provide 2 additional methods for adding and removing chunks.
+
+To add a new stream to the chunk:
+
+```php
+use Drewlabs\Psr7Stream\StreamFactory as Factory;
+
+$stream = Factory::chunk();
+
+// Add a new stream instance
+$stream->push(Stream::new('/path/to/resource'));
+```
+
+To remove the last inserted chunk:
+
+```php
+use Drewlabs\Psr7Stream\StreamFactory as Factory;
+
+$stream = Factory::chunk();
+
+// Pop the last stream from the stack and return it
+$s = $stream->pop();
+```
+
+**Warning**
+Be careful when using the `pop()` method as it reset the internal pointer of the stream to avoid data corrumption.
+
+- Lazy Stream
+
+Lazy stream is simply an abstraction arround a stream object which resolve the stream only when the developper is ready to operate on it like `read()`, `write()`, etc... It provides a lazy creating implementation of an instance psr7 `StreamInterface`.
+
+Lazy stream can be created passing a callable to the contructor method:
+
+```php
+use Drewlabs\Psr7Stream\StreamFactory as Factory;
+use Drewlabs\Psr7Stream\Stream;
+use Drewlabs\Psr7Stream\LazyStream;
+//
+
+$stream_source = 'Hello world...';
+
+$stream = Factory::lazy(function() use (&$stream_source) {
+    return Stream::new($stream_source);
+});
+
+// Or using constructor
+
+$stream = new LazyStream(function() use (&$stream_source) {
+    return Stream::new($stream_source);
+});
+```
+
+or using an instance of `CreatesStream` interface, with offer an object oriented way to create a new stream:
+
+```php
+use Drewlabs\Psr7Stream\CreatesStream;
+use Drewlabs\Psr7Stream\Stream;
+
+// CreateTextStream.php
+class CreateTextStream implements CreatesStream
+{
+    /**
+     * 
+     * @var string
+     * */
+    private $source;
+
+    public function __construct($source)
+    {
+        $this->source = $source;
+    }
+
+    public function createStream()
+    {
+        return Stream::new($this->source);
+    }
+}
+
+// main.php
+$stream = new LazyStream(new CreateTextStream('/path/to/resource'));
+
+// Or using factory function
+$stream = Factory::lazy(new CreateTextStream('/path/to/resource'));
 ```

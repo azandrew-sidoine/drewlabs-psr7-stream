@@ -91,12 +91,14 @@ class ChunkedStream implements StreamInterface
         $stream = array_pop($this->streams);
 
         $this->seekable = true;
+        
         foreach ($this->streams as $stream) {
             if (!$stream->isSeekable()) {
                 $this->seekable = false;
                 break;
             }
         }
+        $this->rewind();
         return $stream;
     }
 

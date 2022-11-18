@@ -8,6 +8,26 @@ use Psr\Http\Message\StreamInterface;
 use Drewlabs\Psr7Stream\CreatesStream;
 use Drewlabs\Psr7Stream\Tests\Unit\NotSeekableStream;
 
+class CreateTextStream implements CreatesStream
+{
+    /**
+     * 
+     * @var string
+     * */
+    private $source;
+
+    public function __construct($source)
+    {
+        $this->source = $source;
+    }
+
+    public function createStream()
+    {
+        return Stream::new($this->source);
+    }
+}
+
+
 class LazyStreamTest extends TestCase
 {
 
@@ -87,9 +107,7 @@ class LazyStreamTest extends TestCase
             $stream->rewind();
             $stream->getContents();
             $this->assertEquals(true, $stream->eof());
-        }, function () {
-            return Stream::new('I am a lazy stream');
-        });
+        }, new CreateTextStream('I am a lazy stream'));
     }
 
     public function test_lazy_stream_not_seekable_for_not_seekable_stream()
