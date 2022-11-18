@@ -20,6 +20,7 @@ use Psr\Http\Message\StreamInterface;
 
 class Stream implements StreamInterface
 {
+    use StringableStream;
     /**
      * Hash table of readable and writable stream types.
      *
@@ -87,19 +88,6 @@ class Stream implements StreamInterface
     }
 
     /**
-     * @return string
-     */
-    public function __toString()
-    {
-        try {
-            $this->rewind();
-            return $this->getContents();
-        } catch (\Throwable $e) {
-            throw $e;
-        }
-    }
-
-    /**
      * Creates an instance of Psr7 StreamInterface
      * @param string|resource|StreamInterface $body 
      * @param string $mode 
@@ -113,6 +101,11 @@ class Stream implements StreamInterface
         }
         // Ensure to create an empty string when null is passed as parameter
         $body = $body ?? '';
+
+        // Add suport for file path or resources
+        if (is_string($body) && (@file_exists($body) || in_array(mb_strtolower($body), ["php://memory", "php://temp"]))) {
+            $body = Utils::tryFopen($body, $mode);
+        }
 
         if (\is_string($body)) {
             $resource = fopen('php://temp', $mode ?? 'rw+');
@@ -202,7 +195,7 @@ class Stream implements StreamInterface
     public function seek($offset, $whence = \SEEK_SET): void
     {
         if (!$this->seekable) {
-            throw new \RuntimeException('Stream is not seekable');
+            throw StreamException::notSeekable(__CLASS__);
         }
 
         if (-1 === fseek($this->stream, $offset, $whence)) {
@@ -312,7 +305,6 @@ class Stream implements StreamInterface
         if (false !== $this->uri) {
             $this->uri = $this->getMetadata('uri') ?? false;
         }
-
         return $this->uri;
     }
 }

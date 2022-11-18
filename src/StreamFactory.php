@@ -22,6 +22,35 @@ use TypeError;
 
 class StreamFactory implements StreamFactoryInterface
 {
+
+    /**
+     * Creates a LazyStream instance
+     * 
+     * 
+     * @param callable|CreatesStream|null|string $arg
+     * @return LazyStream 
+     */
+    public static function lazy($arg)
+    {
+        return new LazyStream($arg);
+    }
+
+    /**
+     * Creates a {@see ChunkedStream} instance
+     * 
+     * **Note**
+     * Chunked Stream instances are combines a list of streams
+     * in a single contiguous data structure (array) and work with
+     * them as working with a normal psr7 stream
+     * 
+     * @param (StreamInterface|string)[] $chunks 
+     * @return ChunkedStream 
+     */
+    public static function chunk(array $chunks = [])
+    {
+        return new ChunkedStream($chunks);
+    }
+
     /**
      * Create a new stream from the specified resource
      *
@@ -96,37 +125,6 @@ class StreamFactory implements StreamFactoryInterface
         return Stream::new($content, 'w+b');
     }
 
-    private static function tryFopen(string $path, string $mode)
-    {
-        $exception = null;
-        set_error_handler(static function (int $errno, string $errstr) use ($path, $mode, &$exception): bool {
-            $exception = new \RuntimeException(sprintf(
-                'Unable to open "%s" using mode "%s": %s',
-                $path,
-                $mode,
-                $errstr
-            ));
-            return true;
-        });
-
-        try {
-            $options = substr($path, 0, 5) === 's3://' ? ['s3' => ['seekable' => true]] : [];
-            $handle = fopen($path, $mode, false, stream_context_create($options));
-        } catch (\Throwable $e) {
-            $exception = new \RuntimeException(sprintf(
-                'Unable to open "%s" using mode "%s": %s',
-                $path,
-                $mode,
-                $e->getMessage()
-            ), 0, $e);
-        }
-        restore_error_handler();
-        if ($exception) {
-            throw $exception;
-        }
-        return $handle;
-    }
-
     /**
      * Create a stream from an existing file.
      *
@@ -144,7 +142,7 @@ class StreamFactory implements StreamFactoryInterface
     public function createStreamFromFile($path, $mode = 'r+b'): StreamInterface
     {
         if (@file_exists($path) || in_array(mb_strtolower($path), ["php://memory", "php://temp"])) {
-            $stream = static::tryFopen($path, $mode);
+            $stream = Utils::tryFopen($path, $mode);
             return $stream ? Stream::new($stream)  : Stream::new('');
         }
         throw IOException::notFound($path);
