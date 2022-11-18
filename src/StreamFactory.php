@@ -48,7 +48,7 @@ class StreamFactory implements StreamFactoryInterface
      */
     public static function chunk(array $chunks = [])
     {
-        return new ChunkedStream($chunks);
+        return new ChunkedStream(...$chunks);
     }
 
     /**
