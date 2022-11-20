@@ -26,7 +26,7 @@ class Stream implements StreamInterface
      *
      * @var array
      */
-    protected const READ_WRITE_DICT = [
+    const READ_WRITE_DICT = [
         'read' => [
             'r' => true, 'w+' => true, 'r+' => true, 'x+' => true, 'c+' => true,
             'rb' => true, 'w+b' => true, 'r+b' => true, 'x+b' => true,
