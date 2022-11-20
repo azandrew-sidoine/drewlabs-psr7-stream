@@ -120,7 +120,7 @@ class StreamFactory implements StreamFactoryInterface
      * @return StreamInterface 
      * @throws InvalidArgumentException 
      */
-    public function createStream($content = ''): StreamInterface
+    public function createStream(string $content = ''): StreamInterface
     {
         return Stream::new($content, 'w+b');
     }
@@ -139,7 +139,7 @@ class StreamFactory implements StreamFactoryInterface
      * @throws InvalidArgumentException 
      * @throws IOException 
      */
-    public function createStreamFromFile($path, $mode = 'r+b'): StreamInterface
+    public function createStreamFromFile(string $path, string $mode = 'r+b'): StreamInterface
     {
         if (@file_exists($path) || in_array(mb_strtolower($path), ["php://memory", "php://temp"])) {
             $stream = Utils::tryFopen($path, $mode);
