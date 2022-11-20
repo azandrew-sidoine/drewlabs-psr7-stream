@@ -44,7 +44,7 @@ class StreamException extends Exception
      * @param int $pos 
      * @return StreamException 
      */
-    public static function seekException($streamClass = '', int $pos)
+    public static function seekException($streamClass = '', int $pos = 0)
     {
         return new self('unable to seek ' . $pos . ' of ' . ($streamClass ?? '') . ' stream');
     }

@@ -6,7 +6,7 @@ use Drewlabs\Psr7Stream\Exceptions\StreamException;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 
-class ChunkedStream implements StreamInterface
+class StackedStream implements StreamInterface
 {
     use StringableStream, ReadableStream;
 
@@ -27,14 +27,14 @@ class ChunkedStream implements StreamInterface
      * 
      * @var int
      */
-    private $current;
+    private $current = 0;
 
     /**
      * Tracks the current pointer position in the stream
      * 
      * @var int
      */
-    private $pos;
+    private $pos = 0;
 
     /**
      * Creates a chunked stream object that we track all of the streams
@@ -47,8 +47,9 @@ class ChunkedStream implements StreamInterface
      * 
      * @throws InvalidArgumentException 
      */
-    public function __construct(array $streams = [])
+    public function __construct(...$streams)
     {
+        $streams = ($arguments = func_get_args()) && is_array($arguments[0] ?? null) ? $arguments[0] : $arguments;
         foreach ($streams as $stream) {
             if (!($stream instanceof StreamInterface)) {
                 $stream = StreamFactory::lazy($stream);
@@ -87,7 +88,18 @@ class ChunkedStream implements StreamInterface
         if (null === $this->streams) {
             return null;
         }
-        return array_pop($this->streams);
+        $stream = array_pop($this->streams);
+
+        $this->seekable = true;
+        
+        foreach ($this->streams as $stream) {
+            if (!$stream->isSeekable()) {
+                $this->seekable = false;
+                break;
+            }
+        }
+        $this->rewind();
+        return $stream;
     }
 
     public function close()

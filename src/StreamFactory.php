@@ -44,11 +44,11 @@ class StreamFactory implements StreamFactoryInterface
      * them as working with a normal psr7 stream
      * 
      * @param (StreamInterface|string)[] $chunks 
-     * @return ChunkedStream 
+     * @return StackedStream 
      */
-    public static function chunk(array $chunks = [])
+    public static function stack(array $chunks = [])
     {
-        return new ChunkedStream($chunks);
+        return new StackedStream(...$chunks);
     }
 
     /**
