@@ -40,7 +40,7 @@ class StreamTest extends TestCase
         $stream = Stream::new(null, 'wb+');
         $stream->write("Hello World!\n");
         $size = $stream->getSize();
-        $this->assertIsInt($size, 'Expect the getSize() to return an integer');
+        $this->assertTrue(is_int($size), 'Expect the getSize() to return an integer');
     }
 
     public function testRewindMethod()
@@ -65,7 +65,7 @@ class StreamTest extends TestCase
         $this->assertTrue($stream->isWritable());
         $this->assertTrue($stream->isSeekable());
         $this->assertEquals('php://temp', $stream->getMetadata('uri'));
-        $this->assertIsArray($stream->getMetadata());
+        $this->assertTrue(is_array($stream->getMetadata()));
         $this->assertEquals(4, $stream->getSize());
         $this->assertFalse($stream->eof());
         $stream->close();
