@@ -101,12 +101,7 @@ class Stream implements StreamInterface
         }
         // Ensure to create an empty string when null is passed as parameter
         $body = $body ?? '';
-
-        // Add suport for file path or resources
-        if (is_string($body) && (@file_exists($body) || in_array(mb_strtolower($body), ["php://memory", "php://temp"]))) {
-            $body = Utils::tryFopen($body, $mode);
-        }
-
+        
         if (\is_string($body)) {
             $resource = fopen('php://temp', $mode ?? 'rw+');
             fwrite($resource, $body);
