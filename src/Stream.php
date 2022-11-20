@@ -120,7 +120,8 @@ class Stream implements StreamInterface
         throw new \InvalidArgumentException('First argument to Stream::create() must be a string, resource or StreamInterface.');
     }
 
-    public function close(): void
+    #[\ReturnTypeWillChange]
+    public function close()
     {
         if (!isset($this->stream)) {
             return;
@@ -144,14 +145,15 @@ class Stream implements StreamInterface
         return $result;
     }
 
-    public function getSize(): ?int
+    #[\ReturnTypeWillChange]
+    public function getSize()
     {
         if (null !== $this->size) {
             return $this->size;
         }
 
         if (!isset($this->stream)) {
-            return null;
+            return 0;
         }
 
         // Clear the stat cache if the stream has a URI
@@ -168,7 +170,8 @@ class Stream implements StreamInterface
         return $this->size;
     }
 
-    public function tell(): int
+    #[\ReturnTypeWillChange]
+    public function tell()
     {
         if (false === $result = ftell($this->stream)) {
             throw new \RuntimeException('Unable to determine stream position');
@@ -177,17 +180,20 @@ class Stream implements StreamInterface
         return $result;
     }
 
-    public function eof(): bool
+    #[\ReturnTypeWillChange]
+    public function eof()
     {
         return !$this->stream || feof($this->stream);
     }
 
-    public function isSeekable(): bool
+    #[\ReturnTypeWillChange]
+    public function isSeekable()
     {
         return $this->seekable;
     }
 
-    public function seek($offset, $whence = \SEEK_SET): void
+    #[\ReturnTypeWillChange]
+    public function seek($offset, $whence = \SEEK_SET)
     {
         if (!$this->seekable) {
             throw StreamException::notSeekable(__CLASS__);
@@ -198,26 +204,22 @@ class Stream implements StreamInterface
         }
     }
 
-    public function rewind(): void
+    #[\ReturnTypeWillChange]
+    public function rewind()
     {
         if ($this->isSeekable()) {
             $this->seek(0);
         }
     }
 
-    public function isWritable(): bool
+    #[\ReturnTypeWillChange]
+    public function isWritable()
     {
         return $this->writable;
     }
 
-    /**
-     * {@inheritDoc}
-     * @param string $string 
-     * @return int 
-     * @throws StreamException
-     * @throws IOException 
-     */
-    public function write($string): int
+    #[\ReturnTypeWillChange]
+    public function write($string)
     {
         if (!isset($this->stream)) {
             throw StreamException::detached();
@@ -234,20 +236,14 @@ class Stream implements StreamInterface
         return $result;
     }
 
-    public function isReadable(): bool
+    #[\ReturnTypeWillChange]
+    public function isReadable()
     {
         return $this->readable;
     }
 
-    /**
-     * {@inheritDoc}
-     * @param int $length
-     * @return string
-     * @throws StreamException 
-     * @throws InvalidArgumentException 
-     * @throws IOException 
-     */
-    public function read($length): string
+    #[\ReturnTypeWillChange]
+    public function read($length)
     {
         if (!isset($this->stream)) {
             throw StreamException::detached('Stream is detached');
@@ -269,7 +265,8 @@ class Stream implements StreamInterface
         return $result;
     }
 
-    public function getContents(): string
+    #[\ReturnTypeWillChange]
+    public function getContents()
     {
         if (!isset($this->stream)) {
             throw StreamException::detached();
