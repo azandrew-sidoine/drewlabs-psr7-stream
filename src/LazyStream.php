@@ -9,6 +9,8 @@ use Psr\Http\Message\StreamInterface;
 class LazyStream implements StreamInterface
 {
 
+    use StringableStream;
+
     /**
      * 
      * @var callable|null|string
@@ -51,11 +53,6 @@ class LazyStream implements StreamInterface
             }
         }
         return $this->stream;
-    }
-
-    public function __toString()
-    {
-        return $this->getStream()->__toString();
     }
 
     public function close()
