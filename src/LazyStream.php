@@ -122,6 +122,6 @@ class LazyStream implements StreamInterface
 
     public function getMetadata($key = null)
     {
-        return $this->getMetadata($key);
+        return $this->getStream()->getMetadata($key);
     }
 }
