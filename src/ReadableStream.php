@@ -7,17 +7,17 @@ use Drewlabs\Psr7Stream\Exceptions\StreamException;
 trait ReadableStream
 {
 
-    public function isWritable()
+    public function isWritable(): bool
     {
         return false;
     }
 
-    public function write($string)
+    public function write($string): int
     {
         throw StreamException::notWritable(__CLASS__);
     }
 
-    public function isReadable()
+    public function isReadable(): bool
     {
         return true;
     }

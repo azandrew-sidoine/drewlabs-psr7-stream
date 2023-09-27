@@ -25,7 +25,7 @@ class NotSeekableStream implements StreamInterface
         $this->content = $content;
     }
 
-    public function close()
+    public function close(): void
     {
         $this->pos = 0;
     }
@@ -36,37 +36,37 @@ class NotSeekableStream implements StreamInterface
         return $this;
     }
 
-    public function getSize()
+    public function getSize(): ?int
     {
         return strlen($this->content);
     }
 
-    public function tell()
+    public function tell(): int
     {
         return $this->pos;
     }
 
-    public function eof()
+    public function eof(): bool
     {
         return $this->pos === strlen($this->content);
     }
 
-    public function isSeekable()
+    public function isSeekable(): bool
     {
         return false;
     }
 
-    public function seek($offset, $whence = SEEK_SET)
+    public function seek($offset, $whence = SEEK_SET): void
     {
         throw new RuntimeException('Cannot seek an not seekable stream');
     }
 
-    public function rewind()
+    public function rewind(): void
     {
         $this->pos = 0;
     }
 
-    public function read($length)
+    public function read($length): string
     {
         $buffer = substr($this->content, $this->pos, $length);
         $pos = $this->pos + strlen($buffer);
@@ -74,7 +74,7 @@ class NotSeekableStream implements StreamInterface
         return $buffer;
     }
 
-    public function getContents()
+    public function getContents(): string
     {
         return $this->read(strlen($this->content));
     }

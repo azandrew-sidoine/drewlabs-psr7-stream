@@ -55,9 +55,9 @@ class LazyStream implements StreamInterface
         return $this->stream;
     }
 
-    public function close()
+    public function close(): void
     {
-        return $this->getStream()->close();
+        $this->getStream()->close();
     }
 
     public function detach()
@@ -65,57 +65,68 @@ class LazyStream implements StreamInterface
         return $this->getStream()->detach();
     }
 
-    public function getSize()
+    #[\ReturnTypeWillChange]
+    public function getSize(): ?int
     {
         return $this->getStream()->getSize();
     }
 
-    public function tell()
+    #[\ReturnTypeWillChange]
+    public function tell(): int
     {
         return $this->getStream()->tell();
     }
 
-    public function eof()
+    #[\ReturnTypeWillChange]
+    public function eof(): bool
     {
         return $this->getStream()->eof();
     }
 
-    public function isSeekable()
+    #[\ReturnTypeWillChange]
+    public function isSeekable(): bool
     {
         return $this->getStream()->isSeekable();
     }
 
-    public function seek($offset, $whence = SEEK_SET)
+    #[\ReturnTypeWillChange]
+    public function seek($offset, $whence = SEEK_SET): void
     {
-        return $this->getStream()->seek($offset, $whence);
+        $this->getStream()->seek($offset, $whence);
     }
 
-    public function rewind()
+    #[\ReturnTypeWillChange]
+    public function rewind(): void
     {
-        return $this->getStream()->rewind();
+        $this->getStream()->rewind();
     }
 
-    public function isWritable()
+    #[\ReturnTypeWillChange]
+    public function isWritable(): bool
     {
         return $this->getStream()->isWritable();
     }
 
-    public function write($string)
+    #[\ReturnTypeWillChange]
+    public function write($string): int
     {
         return $this->getStream()->write($string);
     }
 
-    public function isReadable()
+    #[\ReturnTypeWillChange]
+    public function isReadable(): bool
     {
         return $this->getStream()->isReadable();
     }
 
-    public function read($length)
+    #[\ReturnTypeWillChange]
+    public function read($length): string
     {
         return $this->getStream()->read($length);
     }
 
-    public function getContents()
+    #[\ReturnTypeWillChange]
+    public function getContents(): string
     {
         return $this->getStream()->getContents();
     }

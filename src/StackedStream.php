@@ -102,7 +102,8 @@ class StackedStream implements StreamInterface
         return $stream;
     }
 
-    public function close()
+    #[\ReturnTypeWillChange]
+    public function close(): void
     {
         $this->pos = $this->current = 0;
         $this->seekable = true;
@@ -127,7 +128,8 @@ class StackedStream implements StreamInterface
         return null;
     }
 
-    public function getSize()
+    #[\ReturnTypeWillChange]
+    public function getSize(): ?int
     {
         $size = 0;
         foreach ($this->streams as $stream) {
@@ -139,12 +141,14 @@ class StackedStream implements StreamInterface
         return $size;
     }
 
-    public function tell()
+    #[\ReturnTypeWillChange]
+    public function tell(): int
     {
         return $this->pos;
     }
 
-    public function eof()
+    #[\ReturnTypeWillChange]
+    public function eof(): bool
     {
         // We reach an end of file there is no stream in the $this->streams
         // array or the current position if greater that the streams last index
@@ -154,12 +158,14 @@ class StackedStream implements StreamInterface
                 isset($this->streams[$this->current]) && $this->streams[$this->current]->eof());
     }
 
-    public function isSeekable()
+    #[\ReturnTypeWillChange]
+    public function isSeekable(): bool
     {
         return $this->seekable;
     }
 
-    public function seek($offset, $whence = SEEK_SET)
+    #[\ReturnTypeWillChange]
+    public function seek($offset, $whence = SEEK_SET): void
     {
         if (!$this->seekable) {
             throw StreamException::notSeekable(__CLASS__);
@@ -184,12 +190,14 @@ class StackedStream implements StreamInterface
         }
     }
 
-    public function rewind()
+    #[\ReturnTypeWillChange]
+    public function rewind(): void
     {
         $this->seek(0);
     }
 
-    public function read($length)
+    #[\ReturnTypeWillChange]
+    public function read($length): string
     {
         // Read the appendded streams until the length is reached or EOF
         $buffer = '';
@@ -226,7 +234,8 @@ class StackedStream implements StreamInterface
         return $buffer;
     }
 
-    public function getContents()
+    #[\ReturnTypeWillChange]
+    public function getContents(): string
     {
         return $this->toString();
     }
