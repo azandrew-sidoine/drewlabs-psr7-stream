@@ -8,3 +8,7 @@
 - Add @file_exists to suppress the error at StreamFactory line 38
 - Bug fix in Psr StreamFactory implementation
 - Bug related to file_exists function in StreamFactory::createStreamFrom
+
+## [v2.0] 2023-09-27
+
+- Updated implementation to be only psr/http-message v^2.0 compatible
