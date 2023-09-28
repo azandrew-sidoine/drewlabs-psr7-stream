@@ -5,7 +5,7 @@ namespace Drewlabs\Psr7Stream;
 trait StringableStream
 {
     #[\ReturnTypeWillChange]
-    public function __toString()
+    public function __toString(): string
     {
         try {
             $this->rewind();
