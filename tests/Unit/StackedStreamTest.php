@@ -10,12 +10,13 @@ use Psr\Http\Message\StreamInterface;
 class StackedStreamTest extends TestCase
 {
 
+    /** @params StreamInterface ...$streams */
     private function createStream(...$streams)
     {
         return StreamFactory::stack($streams);
     }
 
-    private function call(\Closure $callback, StreamInterface $stream = null)
+    private function call(\Closure $callback, ?StreamInterface $stream = null)
     {
         $stream = $stream ?? $this->createStream();
         $callback($stream);

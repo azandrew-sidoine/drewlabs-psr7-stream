@@ -246,7 +246,7 @@ class Stream implements StreamInterface
     public function read($length): string
     {
         if (!isset($this->stream)) {
-            throw StreamException::detached('Stream is detached');
+            throw StreamException::detached();
         }
         if (!$this->readable) {
             throw IOException::read('Cannot read from non-readable stream');

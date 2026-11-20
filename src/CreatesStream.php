@@ -8,7 +8,7 @@ interface CreatesStream
 {
 
     /**
-     * Invoked to create a stream instance
+     * invoked to create a stream instance
      * 
      * @return StreamInterface 
      */

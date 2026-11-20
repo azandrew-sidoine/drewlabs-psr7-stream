@@ -18,6 +18,7 @@ class Utils
     public static function tryFopen(string $path, string $mode)
     {
         $exception = null;
+
         set_error_handler(static function (int $errno, string $errstr) use ($path, $mode, &$exception): bool {
             $exception = new \RuntimeException(sprintf(
                 'Unable to open "%s" using mode "%s": %s',
@@ -30,19 +31,18 @@ class Utils
 
         try {
             $options = substr($path, 0, 5) === 's3://' ? ['s3' => ['seekable' => true]] : [];
-            $fd = fopen($path, $mode, false, stream_context_create($options));
+            return fopen($path, $mode, false, stream_context_create($options));
         } catch (\Throwable $e) {
+
             $exception = new \RuntimeException(sprintf(
                 'Unable to open "%s" using mode "%s": %s',
                 $path,
                 $mode,
                 $e->getMessage()
             ), 0, $e);
-        }
-        restore_error_handler();
-        if ($exception) {
+            restore_error_handler();
+
             throw $exception;
         }
-        return $fd;
     }
 }

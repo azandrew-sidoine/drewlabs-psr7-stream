@@ -11,6 +11,7 @@ class NotSeekableStream implements StreamInterface
 {
     use StringableStream, ReadableStream;
 
+    /** @var string */
     private $content;
 
     /**

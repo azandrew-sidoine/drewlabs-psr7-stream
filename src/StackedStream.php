@@ -10,35 +10,21 @@ class StackedStream implements StreamInterface
 {
     use StringableStream, ReadableStream;
 
-    /**
-     * 
-     * @var StreamInterface[]
-     */
+    /** @var StreamInterface[] */
     private $streams = [];
 
-    /**
-     * 
-     * @var true
-     */
+    /**  @var bool */
     private $seekable = true;
 
 
-    /**
-     * 
-     * @var int
-     */
+    /** @var int */
     private $current = 0;
 
-    /**
-     * Tracks the current pointer position in the stream
-     * 
-     * @var int
-     */
+    /** @var int tracks the current pointer position in the stream */
     private $pos = 0;
 
     /**
-     * Creates a chunked stream object that we track all of the streams
-     * during read, seek, close, detach action calls
+     * creates a chunked stream object that we track all of the streams during read, seek, close, detach action calls
      * 
      * **Notee**
      * The chunked stream class is 
@@ -119,8 +105,6 @@ class StackedStream implements StreamInterface
         $this->pos = $this->current = 0;
         $this->seekable = true;
 
-        // Detach all stream and return null as it's not clear which underlying
-        // stream to return
         foreach ($this->streams ?? [] as $stream) {
             $stream->detach();
         }

@@ -16,6 +16,7 @@ class CreateTextStream implements CreatesStream
      * */
     private $source;
 
+    /** @param string $source */
     public function __construct($source)
     {
         $this->source = $source;

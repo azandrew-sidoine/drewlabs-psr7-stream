@@ -78,6 +78,7 @@ class StreamFactory implements StreamFactoryInterface
         }
     }
 
+    /** @param mixed $resource */
     private static function createFromString($resource)
     {
         if (\is_string($resource)) {
